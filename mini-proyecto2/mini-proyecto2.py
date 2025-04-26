@@ -5,16 +5,15 @@ import sys
 import math
 import time
 
-# Intentar conectar al puerto serial del Arduino
+
 try:
-    arduino = serial.Serial('COM4', 9600)  # Cambia COM3 si usas otro puerto
-    time.sleep(2)  # Espera para que Arduino se reinicie
+    arduino = serial.Serial('COM4', 9600)  
+    time.sleep(2)  
     print("[INFO] Conectado a Arduino.")
 except serial.SerialException:
     print("[ERROR] No se pudo conectar a Arduino.")
     sys.exit(1)
 
-# Inicializar MediaPipe
 mp_hands = mp.solutions.hands
 hands = mp_hands.Hands(
     static_image_mode=False,
@@ -23,26 +22,21 @@ hands = mp_hands.Hands(
 )
 mp_draw = mp.solutions.drawing_utils
 
-# Cámara
 cap = cv2.VideoCapture(0)
 ultimo_numero = -1
 
-# Función para calcular ángulo entre 3 puntos
 def calcular_angulo(a, b, c):
     ang = math.degrees(math.atan2(c[1] - b[1], c[0] - b[0]) -
                        math.atan2(a[1] - b[1], a[0] - b[0]))
     ang = abs(ang)
     return 360 - ang if ang > 180 else ang
 
-# Contar dedos con la mano hacia el frente
 def contar_dedos(puntos):
     dedos = []
 
-    # Pulgar
     angulo_pulgar = calcular_angulo(puntos[2], puntos[3], puntos[4])
     dedos.append(1 if angulo_pulgar > 150 else 0)
 
-    # Índice, medio, anular y meñique
     for tip_id in [8, 12, 16, 20]:
         base_id = tip_id - 2
         angulo = calcular_angulo(puntos[base_id - 1], puntos[base_id], puntos[tip_id])
@@ -68,17 +62,13 @@ while True:
         h, w, _ = frame.shape
         puntos = [(int(lm.x * w), int(lm.y * h)) for lm in handLms.landmark]
         dedos_contados = contar_dedos(puntos)
-
-        # Límite a máximo 5 dedos
         dedos_contados = min(dedos_contados, 5)
 
-    # Enviar solo si cambió el número
     if dedos_contados != ultimo_numero:
         print(f"[INFO] Dedos detectados: {dedos_contados}")
         arduino.write(str(dedos_contados).encode())
         ultimo_numero = dedos_contados
 
-    # Mostrar en pantalla
     cv2.putText(frame, f"Dedos: {dedos_contados}", (10, 60),
                 cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 255, 0), 3)
     cv2.imshow("Contador de Dedos", frame)
