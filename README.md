@@ -2,7 +2,7 @@
 
 El proyecto consiste en un sistema que cuenta los dedos levantados (de 0 a 5) utilizando visión por computadora. El número detectado se envía al Arduino a través de comunicación serial, donde se representa físicamente en un display de 7 segmentos conectado al arduino.
 
-#Funcionamiento general:
+# Funcionamiento general:
 
 Se usa Python con las librerías MediaPipe y OpenCV para detectar la mano y contar los dedos en tiempo real desde una cámara web.
 
